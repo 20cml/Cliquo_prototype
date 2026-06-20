@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Cliquo — Campus Hangouts</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
+          display: ['Baloo 2', 'cursive'],
+          mono: ['ui-monospace', 'Menlo', 'monospace'],
+        },
+      },
+    },
+  };
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+  html, body { margin: 0; padding: 0; }
+  body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+  input, textarea { font-family: inherit; outline: none; }
+  input::placeholder, textarea::placeholder { color: var(--ink3); }
+  input[type="date"]::-webkit-calendar-picker-indicator,
+  input[type="time"]::-webkit-calendar-picker-indicator { display: none; -webkit-appearance: none; }
+  input[type="date"], input[type="time"] { -webkit-appearance: none; appearance: none; }
+  .no-scrollbar::-webkit-scrollbar { width: 0; height: 0; }
+  .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+
+  .clq {
+    --screen:#15151f; --scr2:#1b1b27;
+    --g1:.5; --g2:.3; --g3:.26;
+    --ink:#f5f5fa; --ink2:rgba(255,255,255,.62); --ink3:rgba(255,255,255,.45); --ink4:rgba(255,255,255,.22);
+    --card:rgba(44,44,62,.66); --cardbd:rgba(255,255,255,.1);
+    --glass:rgba(255,255,255,.07); --glassbd:rgba(255,255,255,.12);
+    --field:rgba(255,255,255,.05); --hair:rgba(255,255,255,.1);
+    --status:#fff; --accent:#9b95f7; --tagbg:rgba(124,116,240,.16); --tagtxt:#bcb7f9;
+    --homeind:rgba(255,255,255,.5); --searchico:rgba(255,255,255,.5); --clearbg:rgba(255,255,255,.25);
+    --navbg:rgba(20,20,32,.55); --navbd:rgba(255,255,255,.12);
+    --going:#4ade80; --chip:rgba(255,255,255,.06); --chipbd:rgba(255,255,255,.14); --chiptxt:rgba(255,255,255,.62);
+    --disBg:rgba(255,255,255,.08); --disTxt:rgba(255,255,255,.35);
+  }
+  .clq[data-theme="light"] {
+    --screen:#eceaf6; --scr2:#f6f6fc;
+    --g1:.2; --g2:.13; --g3:.12;
+    --ink:#18181b; --ink2:rgba(24,24,30,.64); --ink3:rgba(24,24,30,.46); --ink4:rgba(24,24,30,.28);
+    --card:rgba(255,255,255,.74); --cardbd:rgba(24,24,40,.08);
+    --glass:rgba(255,255,255,.66); --glassbd:rgba(24,24,40,.1);
+    --field:rgba(24,24,40,.04); --hair:rgba(24,24,40,.09);
+    --status:#18181b; --accent:#6d63f2; --tagbg:rgba(109,99,242,.1); --tagtxt:#4338ca;
+    --homeind:rgba(24,24,40,.28); --searchico:rgba(24,24,40,.4); --clearbg:rgba(24,24,40,.2);
+    --navbg:rgba(255,255,255,.74); --navbd:rgba(24,24,40,.08);
+    --going:#16a34a; --chip:rgba(255,255,255,.72); --chipbd:rgba(24,24,40,.12); --chiptxt:#52525b;
+    --disBg:rgba(24,24,40,.06); --disTxt:rgba(24,24,40,.4);
+  }
+  @keyframes clqSpin { to { transform: rotate(360deg); } }
+  @keyframes clqFade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes clqRise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes clqPush { from { transform: translateX(100%); } to { transform: translateX(0); } }
+  @keyframes clqUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  @keyframes clqPop { 0% { opacity: 0; transform: scale(.6); } 60% { transform: scale(1.12); } 100% { opacity: 1; transform: scale(1); } }
+  @keyframes clqToast { from { opacity: 0; transform: translate(-50%, 24px); } to { opacity: 1; transform: translate(-50%, 0); } }
+  @keyframes clqPulse { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
+  @keyframes clqDrift { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(14px,18px) scale(1.08); } }
+  @keyframes clqLogoTap { 0% { opacity: 0; transform: scale(.6); } 38% { opacity: 1; transform: scale(1.04); } 54% { transform: scale(.9); } 70% { transform: scale(1.05); } 100% { transform: scale(1); } }
+  @keyframes clqRipple { 0% { opacity: 0; transform: scale(.7); } 12% { opacity: .55; } 100% { opacity: 0; transform: scale(2.1); } }
+</style>
+</head>
+<body>
+  <div id="root" class="clq" data-theme="dark"></div>
+
+<script>
+//=============================================================
+// DATA
+//=============================================================
+const CAT = {
+  Study:  { grad: 'linear-gradient(135deg,#6d63f2,#9d5bf0)', pill: 'rgba(124,116,240,.2)', pillText: '#7c74f0', av: 'linear-gradient(135deg,#8b85f5,#5b52e0)' },
+  Social: { grad: 'linear-gradient(135deg,#f59e0b,#fb923c)', pill: 'rgba(245,158,11,.2)', pillText: '#d97706', av: 'linear-gradient(135deg,#fbbf24,#f59e0b)' },
+  Sports: { grad: 'linear-gradient(135deg,#0ea5b7,#10b981)', pill: 'rgba(16,185,129,.2)', pillText: '#059669', av: 'linear-gradient(135deg,#34d399,#10b981)' },
+  Arts:   { grad: 'linear-gradient(135deg,#d946a8,#ec4899)', pill: 'rgba(236,72,153,.2)', pillText: '#db2777', av: 'linear-gradient(135deg,#f472b6,#ec4899)' },
+};
+
+const EVENTS = [
+  { id: 7, title: 'Sunrise Run Club', host: 'Amara Diallo', meta: 'Nursing · 2028', initials: 'AD', cat: 'Sports', mon: 'OCT', day: '12', when: 'Mon, Oct 12', time: '7:00 AM', end: '8:00 AM', location: 'Campus Gates', cap: 15, filled: 9, today: true, week: true, weekend: false,
+    desc: "Easy 5K loop around campus to start the week right. All paces welcome — we regroup at the top of the hill and grab smoothies after. Bring water!",
+    tags: ['Running', 'Fitness', 'RunClub', 'Morning'] },
+  { id: 5, title: 'Intramural Soccer Pickup', host: 'Jordan Lee', meta: 'Commerce · 2027', initials: 'JL', cat: 'Sports', mon: 'OCT', day: '13', when: 'Tue, Oct 13', time: '6:30 PM', end: '8:00 PM', location: 'North Field', cap: 20, filled: 14, today: false, week: true, weekend: false,
+    desc: "Casual pickup soccer, no experience needed. We split teams on the spot. Cleats optional, good vibes mandatory.",
+    tags: ['Soccer', 'Pickup', 'Intramural', 'Fitness'] },
+  { id: 1, title: 'Linear Algebra Midterm Prep Session', host: 'Alex Kim', meta: 'Software Eng · 2028', initials: 'AK', cat: 'Study', mon: 'OCT', day: '14', when: 'Wed, Oct 14', time: '2:00 PM', end: '4:00 PM', location: 'Maxwell Library · Rm 204', cap: 8, filled: 4, today: false, week: true, weekend: false,
+    desc: "Hey everyone! I'm organizing a study group to go over the numerical linear algebra practice problems before our midterm next week. I'll book a room in the library and bring some coffee. Everyone is welcome — let's ace this test!",
+    tags: ['LinearAlgebra', 'StudyGroup', 'MidtermPrep', 'Engineering'] },
+  { id: 4, title: 'Biology 101 Lab Review', host: 'Sara Okafor', meta: 'Life Sci · 2028', initials: 'SO', cat: 'Study', mon: 'OCT', day: '15', when: 'Thu, Oct 15', time: '5:00 PM', end: '6:30 PM', location: 'Health Sci Bldg · Rm 110', cap: 10, filled: 6, today: false, week: true, weekend: false,
+    desc: "Going over the cell biology lab and the practice quiz. Great for pre-med folks who want to lock in the diagrams before the test. I'll share my notes.",
+    tags: ['Biology', 'LabReview', 'StudyGroup', 'PreMed'] },
+  { id: 2, title: 'City Museum Trip & Coffee Hangout', host: 'Priya Nair', meta: 'History · 2027', initials: 'PN', cat: 'Social', mon: 'OCT', day: '16', when: 'Fri, Oct 16', time: '1:00 PM', end: '4:00 PM', location: 'Meet at Central Station', cap: 12, filled: 7, today: false, week: true, weekend: false,
+    desc: "Checking out the new history exhibits and getting espresso after. Perfect low-key way to meet people if you're new to the city — I'm a transfer too!",
+    tags: ['Museum', 'Coffee', 'History', 'Hangout'] },
+  { id: 6, title: 'Open Mic & Poetry Night', host: 'Lena Cho', meta: 'Fine Arts · 2026', initials: 'LC', cat: 'Arts', mon: 'OCT', day: '16', when: 'Fri, Oct 16', time: '8:00 PM', end: '10:00 PM', location: 'The Grind Café', cap: 30, filled: 18, today: false, week: true, weekend: false,
+    desc: "Share a poem, a song, or just come listen. Sign-up sheet at the door, super welcoming crowd. First-timers strongly encouraged!",
+    tags: ['OpenMic', 'Poetry', 'Music', 'Arts'] },
+  { id: 3, title: 'Casual Board Game Night', host: 'Marco Reyes', meta: 'Kinesiology · 2026', initials: 'MR', cat: 'Social', mon: 'OCT', day: '17', when: 'Sat, Oct 17', time: '7:00 PM', end: '10:00 PM', location: 'Student Centre Lounge', cap: 16, filled: 11, today: false, week: true, weekend: true,
+    desc: "Playing Catan and a few party games. Snacks provided, come hang out and meet some new people! No skill required, we'll teach you.",
+    tags: ['BoardGames', 'Catan', 'GameNight', 'Social'] },
+  { id: 8, title: 'Hackathon Team Formation', host: 'Devon Park', meta: 'Computer Sci · 2027', initials: 'DP', cat: 'Study', mon: 'OCT', day: '18', when: 'Sun, Oct 18', time: '12:00 PM', end: '2:00 PM', location: 'Innovation Hub', cap: 24, filled: 5, today: false, week: true, weekend: true,
+    desc: "Looking for teammates before next weekend's hackathon. Pitch your idea or join one — designers, coders, and first-timers all welcome.",
+    tags: ['Hackathon', 'Coding', 'Teams', 'Engineering'] },
+];
+
+const STOPWORDS = new Set(('a an and the to of for in on at is are be we i you our your my me it this that with come will all my just get got got going go some new few before after up out so let lets everyone who what when where want here there they them his her she he their not no yes can do does did have has had if or but as by from into about over under more most much many any each every other than then them too very nice good great hey hi welcome bring meet make take want like really also even still back around top after first last next week through while during because where which would could should again things stuff gonna wanna doing done need bunch lots only just super pretty maybe perfect everyone folks people').split(' '));
+const PHRASES = [
+  ['linear algebra', 'LinearAlgebra'], ['board game', 'BoardGames'], ['board games', 'BoardGames'],
+  ['open mic', 'OpenMic'], ['study group', 'StudyGroup'], ['study session', 'StudyGroup'],
+  ['lab review', 'LabReview'], ['pre-med', 'PreMed'], ['pre med', 'PreMed'],
+  ['run club', 'RunClub'], ['game night', 'GameNight'], ['midterm', 'MidtermPrep'],
+];
+const NICE = { coffee:'Coffee', exam:'Exam', practice:'Practice', problems:'Practice', running:'Running', run:'Running', soccer:'Soccer', poetry:'Poetry', music:'Music', hackathon:'Hackathon', coding:'Coding', code:'Coding', biology:'Biology', cell:'Biology', calculus:'Calculus', math:'Math', museum:'Museum', history:'History', espresso:'Coffee', smoothies:'Smoothies', design:'Design', designers:'Design', notes:'Notes', quiz:'Quiz', catan:'Catan', snacks:'Snacks', fitness:'Fitness', library:'Study', midterm:'MidtermPrep', team:'Teams', teammates:'Teams', poem:'Poetry' };
+
+function capWord(w){ return w.charAt(0).toUpperCase()+w.slice(1); }
+function extract(text){
+  if(!text || !text.trim()) return [];
+  let t = ' ' + text.toLowerCase().replace(/[^a-z0-9\s-]/g,' ').replace(/\s+/g,' ') + ' ';
+  const out = [];
+  for(const [ph,tag] of PHRASES){
+    if(t.includes(' '+ph+' ') || t.includes(' '+ph)){ if(!out.includes(tag)) out.push(tag); t = t.split(ph).join(' '); }
+  }
+  const words = t.split(' ').map(w=>w.trim()).filter(Boolean);
+  for(const w of words){
+    if(out.length>=5) break;
+    if(w.length<4 || STOPWORDS.has(w) || /^\d+$/.test(w)) continue;
+    const tag = NICE[w] || capWord(w);
+    if(!out.includes(tag)) out.push(tag);
+  }
+  return out.slice(0,5);
+}
+function fmtDate(iso){ if(!iso) return ''; const d=new Date(iso+'T00:00:00'); if(isNaN(d)) return iso; return d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}); }
+function monOf(iso){ if(!iso) return 'OCT'; const d=new Date(iso+'T00:00:00'); if(isNaN(d)) return 'OCT'; return d.toLocaleDateString('en-US',{month:'short'}).toUpperCase(); }
+function dayOf(iso){ if(!iso) return '18'; const d=new Date(iso+'T00:00:00'); if(isNaN(d)) return '18'; return String(d.getDate()); }
+function clock12(hhmm){ const m=hhmm.match(/^(\d{1,2}):(\d{2})/); if(!m) return hhmm; let h=parseInt(m[1],10); const min=m[2]; h=h%12; if(h===0)h=12; return h+':'+min; }
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+//=============================================================
+// STATE
+//=============================================================
+const S = {
+  tab: 'home', detailId: null, showCreate: false,
+  query: '', dateFilter: 'all',
+  searching: false, searched: false,
+  joined: {}, bump: {},
+  cTitle:'', cDate:'', cTime:'', cLoc:'', cCap:8, cDesc:'', cTags:[], cAmpm:'PM',
+  publishing: false, userEvents: [],
+  toast: null, theme: 'dark', photoCount: 4,
+  splash: true, splashFade: false,
+  zoom: 'fit',
+};
+function fitScale(){ return Math.max(.3, Math.min(1, (window.innerHeight-56)/832, (window.innerWidth-32)/384)); }
+function effScale(){ return S.zoom==='fit' ? fitScale() : S.zoom; }
+function setZoom(dir){
+  if(dir==='fit'){ S.zoom='fit'; render(); return; }
+  const base = effScale();
+  const next = Math.round((Math.min(1, Math.max(.3, base + dir*0.1)))*100)/100;
+  S.zoom = next; render();
+}
+let searchT=null, toastT=null;
+
+function allEvents(){ return S.userEvents.concat(EVENTS); }
+function liveFilled(e){ return Math.min(e.cap, e.filled + (S.bump[e.id]||0)); }
+function matches(e){
+  const q = S.query.trim().toLowerCase();
+  const df = S.dateFilter;
+  if(df==='today' && !e.today) return false;
+  if(df==='weekend' && !e.weekend) return false;
+  if(df==='week' && !e.week) return false;
+  if(!q) return true;
+  const hay = (e.title+' '+e.host+' '+e.location+' '+e.desc+' '+e.tags.join(' ')).toLowerCase();
+  return hay.includes(q);
+}
+
+function showToast(msg){ clearTimeout(toastT); S.toast=msg; render(); toastT=setTimeout(()=>{S.toast=null;render();},2600); }
+function join(id){
+  if(!S.joined[id]){ S.joined[id]=true; S.bump[id]=(S.bump[id]||0)+1; showToast("You're in! Added to your calendar"); }
+  else { delete S.joined[id]; S.bump[id]=(S.bump[id]||1)-1; showToast('Left hangout · removed from calendar'); }
+  render();
+}
+function go(tab){ S.tab=tab; S.detailId=null; S.showCreate=false; render(); }
+function deleteEvent(id){
+  delete S.joined[id]; delete S.bump[id];
+  S.userEvents = S.userEvents.filter(e=>e.id!==id);
+  S.detailId=null; showToast('Event deleted'); render();
+}
+function runSearch(){ clearTimeout(searchT); S.searching=true; S.searched=true; render(); searchT=setTimeout(()=>{S.searching=false;render();},650); }
+function publish(){
+  if(!S.cTitle.trim() || !S.cDesc.trim()) return;
+  S.publishing=true; render();
+  setTimeout(()=>{
+    const id = 1000 + S.userEvents.length;
+    const ev = { id, title:S.cTitle.trim(), host:'Jamie Chen', meta:'Computer Sci · 2027', initials:'JC', cat:'Study',
+      mon:monOf(S.cDate), day:dayOf(S.cDate), when:fmtDate(S.cDate)||'Sat, Oct 18', time:(S.cTime?(clock12(S.cTime)+' '+S.cAmpm):'3:00 PM'), end:'',
+      location:S.cLoc.trim()||'Campus', cap:S.cCap, filled:1, today:false, week:true, weekend:false,
+      desc:S.cDesc.trim(), tags:extract(S.cDesc).slice(0,4) };
+    S.joined[id]=true;
+    S.publishing=false; S.showCreate=false; S.tab='home';
+    S.userEvents=[ev].concat(S.userEvents);
+    S.cTitle=''; S.cDate=''; S.cTime=''; S.cLoc=''; S.cCap=8; S.cDesc=''; S.cTags=[]; S.cAmpm='PM';
+    showToast('Hangout published — live on the feed!'); render();
+  },1400);
+}
+
+//=============================================================
+// ICONS (small helpers)
+//=============================================================
+const I = {
+  cal: 'rgba',
+};
+function calIco(c){ return `<svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="3" y="4.5" width="18" height="16" rx="3" stroke="${c}" stroke-width="2"/><path d="M3 9h18" stroke="${c}" stroke-width="2"/></svg>`; }
+function pinIco(c){ return `<svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 21s7-5.6 7-11a7 7 0 1 0-14 0c0 5.4 7 11 7 11Z" stroke="${c}" stroke-width="2"/><circle cx="12" cy="10" r="2.4" stroke="${c}" stroke-width="2"/></svg>`; }
+
+//=============================================================
+// RENDER PIECES
+//=============================================================
+function feedCard(e){
+  const c = CAT[e.cat];
+  const filled = liveFilled(e);
+  const left = e.cap - filled;
+  const joined = !!S.joined[e.id];
+  const snippet = e.desc.length>96 ? e.desc.slice(0,96).trim()+'…' : e.desc;
+  const spots = joined ? (filled+'/'+e.cap+' going · you\u2019re in') : (left<=0 ? 'Full' : left+' of '+e.cap+' spots left');
+  const joinBtn = joined
+    ? `style="background:rgba(34,197,94,.9);color:#fff;box-shadow:none"`
+    : `style="background:linear-gradient(135deg,#8b85f5,#5b52e0);color:#fff;box-shadow:0 6px 16px -5px rgba(124,116,240,.8),inset 0 1px 0 rgba(255,255,255,.3)"`;
+  return `
+  <div class="bg-[var(--card)] border-t border-b border-[var(--hair)] overflow-hidden backdrop-blur-xl" style="animation:clqRise .4s ease both">
+    <div data-act="open" data-id="${e.id}" class="flex items-center gap-2.5 px-3.5 py-3 cursor-pointer">
+      <div class="w-[38px] h-[38px] rounded-full flex-none flex items-center justify-center text-white font-extrabold text-sm" style="background:${c.av};box-shadow:inset 0 1px 0 rgba(255,255,255,.25)">${e.initials}</div>
+      <div class="flex-1 min-w-0">
+        <div class="text-[13.5px] font-bold text-[var(--ink)]">${esc(e.host)}</div>
+        <div class="text-[11.5px] text-[var(--ink3)] font-medium">${esc(e.meta)}</div>
+      </div>
+      <div class="text-[11px] font-extrabold uppercase tracking-wide px-2.5 py-1 rounded-lg" style="color:${c.pillText};background:${c.pill};border:1px solid rgba(255,255,255,.08)">${e.cat}</div>
+    </div>
+    <div data-act="open" data-id="${e.id}" class="h-[150px] flex items-end justify-start p-3.5 text-white cursor-pointer" style="background:${c.grad}">
+      <span class="font-mono text-[11px] tracking-[1.5px] uppercase opacity-85">${e.cat} · event photo</span>
+    </div>
+    <div class="px-[15px] pt-[13px] pb-[15px]">
+      <div data-act="open" data-id="${e.id}" class="cursor-pointer text-[17px] font-extrabold text-[var(--ink)] tracking-[-.3px] leading-tight">${esc(e.title)}</div>
+      <div class="flex flex-wrap gap-x-3.5 gap-y-1.5 mt-2">
+        <span class="inline-flex items-center gap-1.5 text-[12.5px] text-[var(--ink2)] font-semibold">${calIco('var(--accent)')}${esc(e.when)}</span>
+        <span class="inline-flex items-center gap-1.5 text-[12.5px] text-[var(--ink2)] font-semibold">${pinIco('var(--accent)')}${esc(e.location)}</span>
+      </div>
+      <div class="text-[13.5px] text-[var(--ink2)] leading-relaxed mt-2.5">${esc(snippet)}</div>
+      <div class="flex flex-wrap gap-1.5 mt-3">
+        ${e.tags.map(t=>`<span class="text-[11.5px] font-bold text-[var(--tagtxt)] bg-[var(--tagbg)] px-2.5 py-1 rounded-lg">#${esc(t)}</span>`).join('')}
+      </div>
+      <div class="flex items-center justify-between mt-3.5">
+        <span class="text-[12.5px] text-[var(--ink3)] font-semibold">${spots}</span>
+        <button data-act="join" data-id="${e.id}" class="border-0 cursor-pointer text-[13px] font-extrabold px-[18px] py-2 rounded-xl transition-all" ${joinBtn}>${joined?'Going ✓':'Join'}</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function dateChipsHtml(){
+  const defs = [['all','Anytime'],['today','Today'],['week','This week'],['weekend','This weekend']];
+  return defs.map(([k,label])=>{
+    const active = S.dateFilter===k;
+    const st = active
+      ? `border:1px solid rgba(124,116,240,.6);background:rgba(124,116,240,.25);color:var(--tagtxt)`
+      : `border:1px solid var(--chipbd);background:var(--chip);color:var(--chiptxt)`;
+    return `<button data-act="date" data-id="${k}" class="flex-none cursor-pointer font-bold text-[11px] px-2.5 py-1.5 rounded-[10px] whitespace-nowrap backdrop-blur-md" style="${st}">${label}</button>`;
+  }).join('');
+}
+
+function homeScreen(){
+  let feed = allEvents().filter(matches);
+  const qTrim = S.query.trim();
+  const resultLabel = (feed.length===1?'1 hangout':feed.length+' hangouts') + (qTrim?` for \u201c${esc(qTrim)}\u201d`:'');
+  const list = S.searching
+    ? `<div class="flex flex-col items-center gap-3.5 py-14">
+         <div class="w-8 h-8 border-[3px] border-[var(--hair)] rounded-full" style="border-top-color:#8b85f5;animation:clqSpin .7s linear infinite"></div>
+         <span class="text-[13px] text-[var(--ink3)] font-semibold">Finding hangouts…</span>
+       </div>`
+    : feed.length===0
+      ? `<div class="px-[30px] py-14 text-center text-[var(--ink3)]">
+           <div class="text-[40px] mb-2">🔍</div>
+           <div class="font-bold text-[var(--ink)] text-base">No hangouts found</div>
+           <div class="text-[13.5px] mt-1">Try a different keyword or widen the dates.</div>
+         </div>`
+      : `<div class="flex flex-col gap-2 pt-3.5">${feed.map(feedCard).join('')}</div>`;
+  return `
+  <div class="no-scrollbar absolute inset-0 overflow-y-auto pt-[46px] pb-24" style="animation:clqFade .25s ease">
+    <div class="flex items-center justify-between px-[18px] pt-1">
+      <span class="inline-flex items-center">
+        <span class="font-display text-[32px] font-extrabold tracking-[-.3px]" style="background:linear-gradient(120deg,#8b85f5,#d456c4);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">Cliquo</span>
+        <svg width="15" height="15" viewBox="0 0 24 24" style="margin-left:-2px"><path d="M12 2l2.1 6.3L20 10l-5.9 1.7L12 18l-2.1-6.3L4 10l5.9-1.7Z" fill="#ec4899"/></svg>
+      </span>
+      <div class="flex items-center gap-2.5">
+        <div data-act="theme" class="cursor-pointer w-[38px] h-[38px] rounded-full flex items-center justify-center bg-[var(--glass)] border border-[var(--glassbd)] backdrop-blur-md text-[var(--ink)]" style="box-shadow:inset 0 1px 0 rgba(255,255,255,.14)">
+          ${S.theme!=='light'
+            ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 7 7 0 1 0 20 14.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>`
+            : `<svg width="19" height="19" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4.2" stroke="currentColor" stroke-width="2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.2 5.2l1.6 1.6M17.2 17.2l1.6 1.6M18.8 5.2l-1.6 1.6M6.8 17.2l-1.6 1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`}
+        </div>
+        <div data-act="tab" data-id="calendar" class="cursor-pointer w-[38px] h-[38px] rounded-full flex items-center justify-center bg-[var(--glass)] border border-[var(--glassbd)] backdrop-blur-md" style="box-shadow:inset 0 1px 0 rgba(255,255,255,.14)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="4.5" width="18" height="16" rx="3" stroke="var(--ink)" stroke-width="1.8"/><path d="M3 9h18M8 2.5v4M16 2.5v4" stroke="var(--ink)" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+    </div>
+    <div class="px-4 pt-1 pb-0.5">
+      <div class="flex items-center gap-2.5 bg-[var(--glass)] rounded-2xl px-3.5 py-3 backdrop-blur-xl" style="border:1px solid ${S.query?'rgba(124,116,240,.7)':'var(--chipbd)'};box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 6px 18px rgba(0,0,0,.12)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="var(--searchico)" stroke-width="2"/><path d="m20 20-3.2-3.2" stroke="var(--searchico)" stroke-width="2" stroke-linecap="round"/></svg>
+        <input id="searchInput" value="${esc(S.query)}" data-inp="query" placeholder="Search titles or keywords…" class="flex-1 border-0 bg-transparent text-[15px] text-[var(--ink)] min-w-0" />
+        ${S.query?`<div data-act="clear" class="cursor-pointer w-[18px] h-[18px] rounded-full flex items-center justify-center flex-none" style="background:var(--clearbg)"><svg width="9" height="9" viewBox="0 0 10 10"><path d="M1 1l8 8M9 1l-8 8" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></div>`:''}
+      </div>
+      <div class="flex items-center gap-2 mt-3">
+        <div class="no-scrollbar flex gap-1.5 overflow-x-auto flex-1">${dateChipsHtml()}</div>
+      </div>
+    </div>
+    ${(!S.searching && qTrim)?`<div class="px-[18px] pt-1.5 pb-0.5 text-[13px] text-[var(--ink2)] font-bold">${resultLabel}</div>`:''}
+    ${list}
+    <div class="text-center text-[var(--ink4)] text-[12px] pt-6 pb-1.5 font-bold tracking-wider">JUST SHOW UP ~</div>
+  </div>`;
+}
+
+function calendarScreen(){
+  const cal = allEvents().filter(e=>S.joined[e.id]);
+  const n = cal.length;
+  const countLabel = n===0?'Nothing booked':n+(n===1?' hangout coming up':' hangouts coming up');
+  const body = n===0
+    ? `<div class="px-[34px] py-[50px] text-center text-[var(--ink3)]">
+         <div class="w-16 h-16 rounded-[18px] bg-[var(--tagbg)] border border-[var(--cardbd)] flex items-center justify-center mx-auto mb-3.5 text-[30px]">🗓️</div>
+         <div class="font-bold text-[var(--ink)] text-base">No hangouts yet</div>
+         <div class="text-[13.5px] mt-1.5 leading-relaxed">Join an event from your feed and it lands here automatically.</div>
+         <button data-act="tab" data-id="home" class="mt-[18px] border-0 cursor-pointer text-white text-sm font-bold px-5 py-2.5 rounded-[13px]" style="background:linear-gradient(135deg,#8b85f5,#5b52e0);box-shadow:0 8px 20px -6px rgba(124,116,240,.7)">Discover events</button>
+       </div>`
+    : `<div class="flex flex-col gap-3 px-4">${cal.map(e=>`
+        <div data-act="open" data-id="${e.id}" class="cursor-pointer flex gap-3 bg-[var(--card)] border border-[var(--cardbd)] rounded-[20px] p-3.5 backdrop-blur-xl" style="box-shadow:0 8px 28px rgba(0,0,0,.16),inset 0 1px 0 rgba(255,255,255,.12);animation:clqRise .3s ease both">
+          <div class="flex-none w-[52px] text-center">
+            <div class="text-[11px] font-extrabold text-[var(--accent)] uppercase tracking-wide">${e.mon}</div>
+            <div class="text-2xl font-extrabold text-[var(--ink)] leading-tight">${e.day}</div>
+          </div>
+          <div class="w-px bg-[var(--hair)]"></div>
+          <div class="flex-1 min-w-0">
+            <div class="text-[15px] font-extrabold text-[var(--ink)] leading-tight">${esc(e.title)}</div>
+            <div class="text-[12px] text-[var(--ink3)] font-semibold mt-1">${esc(e.time)} · ${esc(e.location)}</div>
+            <span class="inline-flex items-center gap-1.5 mt-2 text-[11.5px] font-bold px-2.5 py-1 rounded-lg" style="color:var(--going);background:rgba(34,197,94,.16)">✓ Going</span>
+          </div>
+        </div>`).join('')}</div>`;
+  return `
+  <div class="no-scrollbar absolute inset-0 overflow-y-auto pt-[60px] pb-24" style="animation:clqFade .25s ease">
+    <div class="px-[18px] pt-1.5 pb-4">
+      <div class="text-[28px] font-extrabold tracking-[-.5px] text-[var(--ink)]">Your calendar</div>
+      <div class="text-[13px] text-[var(--ink3)] font-medium mt-0.5">${countLabel}</div>
+    </div>
+    ${body}
+  </div>`;
+}
+
+function profileScreen(){
+  const joinedCount = allEvents().filter(e=>S.joined[e.id]).length;
+  const defs = [['linear-gradient(135deg,#34d399,#10b981)','RUN CLUB'],['linear-gradient(135deg,#8b85f5,#5b52e0)','STUDY'],['linear-gradient(135deg,#fbbf24,#f59e0b)','COFFEE'],['linear-gradient(135deg,#f472b6,#ec4899)','GAME NIGHT']];
+  const tiles = Array.from({length:S.photoCount},(_,i)=>{
+    if(i<4){
+      return `<div class="w-full rounded-[14px] flex items-end p-2" style="aspect-ratio:1;background:${defs[i][0]}"><span class="font-mono text-[9px] font-bold tracking-wider text-white/95 uppercase">${defs[i][1]}</span></div>`;
+    }
+    return `<div class="w-full rounded-[14px] flex items-center justify-center text-[var(--ink3)] text-2xl font-light" style="aspect-ratio:1;background:var(--field);border:1px dashed var(--cardbd)">+</div>`;
+  }).join('');
+  return `
+  <div class="no-scrollbar absolute inset-0 overflow-y-auto pt-[60px] pb-24" style="animation:clqFade .25s ease">
+    <div class="flex items-center gap-2.5 px-[18px] pt-2.5 pb-4">
+      <div class="w-[74px] h-[74px] rounded-full flex-none flex items-center justify-center text-[28px] font-extrabold text-white" style="background:linear-gradient(135deg,#8b85f5,#5b52e0);box-shadow:0 8px 24px -4px rgba(124,116,240,.6),inset 0 1px 0 rgba(255,255,255,.3)">JC</div>
+      <div class="flex-1 min-w-0 pl-3">
+        <div class="text-sm font-extrabold text-[var(--ink)] mb-3">Jamie Chen</div>
+        <div class="flex items-center justify-start gap-[34px]">
+          <div class="text-left"><div class="text-[17px] font-extrabold text-[var(--ink)] leading-none">${joinedCount}</div><div class="text-[10px] text-[var(--ink3)] font-bold uppercase tracking-wide mt-1">Joined</div></div>
+          <div class="text-left"><div class="text-[17px] font-extrabold text-[var(--ink)] leading-none">${S.userEvents.length}</div><div class="text-[10px] text-[var(--ink3)] font-bold uppercase tracking-wide mt-1">Hosted</div></div>
+          <div class="text-left"><div class="text-[17px] font-extrabold leading-none" style="color:var(--going)">96%</div><div class="text-[10px] text-[var(--ink3)] font-bold uppercase tracking-wide mt-1">Show-up</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="px-[18px] text-[13px] text-[var(--ink3)] font-bold">McMaster University</div>
+    <div class="px-[18px] pt-0.5 pb-2 text-[13px] text-[var(--ink3)] font-bold">Software Engineering · 2027</div>
+    <div class="mx-4 mt-3 bg-[var(--card)] border border-[var(--cardbd)] rounded-2xl p-3.5 text-[13.5px] text-[var(--ink2)] leading-relaxed backdrop-blur-md" style="box-shadow:inset 0 1px 0 rgba(255,255,255,.12)">First-year transfer, new to the city and trying to actually leave my dorm. Here for study sprints, runs at sunrise, and good coffee.</div>
+    <div class="flex items-center justify-between px-4 pt-[22px] pb-2">
+      <span class="text-[12px] font-bold text-[var(--ink3)] uppercase tracking-wider">Event photos</span>
+      <button data-act="addphoto" class="inline-flex items-center gap-1.5 cursor-pointer border border-[var(--glassbd)] bg-[var(--field)] text-[var(--accent)] font-bold text-[11.5px] px-2.5 py-1.5 rounded-[10px]">
+        <svg width="13" height="13" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>Add
+      </button>
+    </div>
+    <div class="grid grid-cols-3 gap-1.5 px-4 pb-2">${tiles}</div>
+  </div>`;
+}
+
+function detailScreen(){
+  const e = allEvents().find(x=>x.id===S.detailId);
+  if(!e) return '';
+  const c = CAT[e.cat];
+  const filled = liveFilled(e);
+  const joined = !!S.joined[e.id];
+  const isMine = e.host==='Jamie Chen';
+  const pct = Math.round(filled/e.cap*100);
+  const spotsLabel = (e.cap-filled<=0)?'This hangout is full':(e.cap-filled)+' spots left';
+  const infoCell = (ico,label,val)=>`<div class="flex gap-2.5 items-start"><div class="w-[34px] h-[34px] rounded-[10px] bg-[var(--tagbg)] border border-[var(--cardbd)] flex items-center justify-center flex-none">${ico}</div><div><div class="text-[11px] text-[var(--ink3)] font-bold">${label}</div><div class="text-[13.5px] font-bold text-[var(--ink)]">${val}</div></div></div>`;
+  return `
+  <div class="absolute inset-0 z-40 bg-[var(--screen)] flex flex-col" style="animation:clqPush .3s cubic-bezier(.32,.72,0,1)">
+    <div class="no-scrollbar flex-1 overflow-y-auto">
+      <div class="relative h-[230px] flex items-end justify-center pb-[18px] text-white" style="background:${c.grad}">
+        <div data-act="closeDetail" class="absolute top-[52px] left-4 cursor-pointer w-[38px] h-[38px] rounded-full flex items-center justify-center" style="background:rgba(20,20,30,.5);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.18);box-shadow:0 2px 10px rgba(0,0,0,.35)">
+          <svg width="11" height="18" viewBox="0 0 11 18"><path d="M9 1.5 2 9l7 7.5" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        ${isMine?`<div data-act="delete" data-id="${e.id}" class="absolute top-[52px] right-4 cursor-pointer w-[38px] h-[38px] rounded-full flex items-center justify-center" style="background:rgba(20,20,30,.5);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.18);box-shadow:0 2px 10px rgba(0,0,0,.35)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13M10 11v6M14 11v6" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></div>`:''}
+        <span class="font-mono text-[12px] tracking-[2px] uppercase opacity-90 text-white">${e.cat} · hero photo</span>
+      </div>
+      <div class="px-[18px] pt-[18px] pb-[140px]">
+        <div class="inline-block text-[11px] font-extrabold uppercase tracking-wide px-2.5 py-1.5 rounded-lg" style="color:${c.pillText};background:${c.pill};border:1px solid rgba(255,255,255,.08)">${e.cat}</div>
+        <div class="text-2xl font-extrabold text-[var(--ink)] tracking-[-.5px] leading-tight mt-3">${esc(e.title)}</div>
+        <div class="flex items-center gap-2.5 mt-4 pb-4 border-b border-[var(--hair)]">
+          <div class="w-10 h-10 rounded-full flex-none flex items-center justify-center text-white font-extrabold text-[15px]" style="background:${c.av};box-shadow:inset 0 1px 0 rgba(255,255,255,.25)">${e.initials}</div>
+          <div><div class="text-[11px] text-[var(--ink3)] font-bold uppercase tracking-wide">Hosted by</div><div class="text-sm font-bold text-[var(--ink)]">${esc(e.host)} · ${esc(e.meta)}</div></div>
+        </div>
+        <div class="grid grid-cols-2 gap-3 mt-[18px]">
+          ${infoCell(`<svg width="17" height="17" viewBox="0 0 24 24" fill="none"><rect x="3" y="4.5" width="18" height="16" rx="3" stroke="var(--accent)" stroke-width="2"/><path d="M3 9h18M8 2.5v4M16 2.5v4" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/></svg>`,'DATE',esc(e.when))}
+          ${infoCell(`<svg width="17" height="17" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="var(--accent)" stroke-width="2"/><path d="M12 7v5l3.5 2" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,'TIME', e.end?(esc(e.time)+' – '+esc(e.end)):esc(e.time))}
+          ${infoCell(`<svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M12 21s7-5.6 7-11a7 7 0 1 0-14 0c0 5.4 7 11 7 11Z" stroke="var(--accent)" stroke-width="2"/><circle cx="12" cy="10" r="2.4" stroke="var(--accent)" stroke-width="2"/></svg>`,'LOCATION',esc(e.location))}
+          ${infoCell(`<svg width="17" height="17" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3.2" stroke="var(--accent)" stroke-width="2"/><path d="M3.5 19c.6-3.2 2.9-5 5.5-5s4.9 1.8 5.5 5" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/><circle cx="17" cy="8.5" r="2.4" stroke="var(--accent)" stroke-width="2"/></svg>`,'SPOTS',filled+' / '+e.cap)}
+        </div>
+        <div class="mt-4 h-[7px] rounded-full bg-[var(--hair)] overflow-hidden"><div class="h-full rounded-full transition-all duration-500" style="width:${pct}%;background:linear-gradient(90deg,#8b85f5,#5b52e0)"></div></div>
+        <div class="text-[12px] text-[var(--ink3)] font-semibold mt-1.5">${spotsLabel}</div>
+        <div class="mt-5 text-[12px] font-bold text-[var(--ink3)] uppercase tracking-wider">Description</div>
+        <div class="text-[14.5px] text-[var(--ink2)] leading-relaxed mt-2">${esc(e.desc)}</div>
+        <div class="mt-5 text-[12px] font-bold text-[var(--ink3)] uppercase tracking-wider">Passions in this hangout</div>
+        <div class="flex flex-wrap gap-1.5 mt-2.5">
+          ${e.tags.map(t=>`<span class="text-[12.5px] font-bold text-[var(--tagtxt)] bg-[var(--tagbg)] border border-[var(--cardbd)] px-2.5 py-1.5 rounded-[9px]">#${esc(t)}</span>`).join('')}
+        </div>
+      </div>
+    </div>
+    <div class="absolute left-0 right-0 bottom-0 px-[18px] pt-3.5 pb-[26px]" style="background:linear-gradient(to top,var(--screen) 55%,transparent)">
+      <button data-act="join" data-id="${e.id}" class="relative overflow-hidden w-full border-0 cursor-pointer text-base font-extrabold p-4 rounded-2xl text-white" style="${joined?'background:rgba(34,197,94,.9);box-shadow:none':'background:linear-gradient(135deg,#8b85f5,#5b52e0);box-shadow:0 10px 26px -6px rgba(124,116,240,.85),inset 0 1px 0 rgba(255,255,255,.3)'}">
+        ${joined?`<span class="inline-flex items-center gap-2"><span class="inline-flex w-5 h-5 rounded-full items-center justify-center" style="background:rgba(255,255,255,.25)">✓</span>You're going!</span>`:'Join Hangout'}
+      </button>
+    </div>
+  </div>`;
+}
+
+function createScreen(){
+  const valid = S.cTitle.trim() && S.cDesc.trim();
+  const postStyle = valid
+    ? `background:linear-gradient(135deg,#8b85f5,#5b52e0);color:#fff;box-shadow:0 6px 14px -5px rgba(124,116,240,.8)`
+    : `background:var(--disBg);color:var(--disTxt);box-shadow:none`;
+  const body = S.publishing
+    ? `<div class="flex-1 flex flex-col items-center justify-center gap-4">
+         <div class="w-[38px] h-[38px] border-[3px] border-[var(--hair)] rounded-full" style="border-top-color:#8b85f5;animation:clqSpin .7s linear infinite"></div>
+         <span class="text-sm text-[var(--ink2)] font-bold">Publishing your hangout…</span>
+         <span class="text-[12px] text-[var(--ink3)] font-medium">Extracting passions &amp; adding to the feed</span>
+       </div>`
+    : `<div class="no-scrollbar flex-1 overflow-y-auto px-[18px] pt-[18px] pb-10">
+         <label class="text-[12px] font-bold text-[var(--ink2)] uppercase tracking-wide">Title</label>
+         <input value="${esc(S.cTitle)}" data-inp="cTitle" placeholder="e.g. Calculus Final Cram Session" class="w-full mt-1.5 mb-4 border-[1.5px] border-[var(--glassbd)] rounded-[13px] px-3.5 py-3 text-[15px] text-[var(--ink)] bg-[var(--field)]" />
+         <div class="flex gap-3">
+           <div class="basis-[28%] flex-none"><label class="text-[12px] font-bold text-[var(--ink2)] uppercase tracking-wide">Date</label><input type="date" value="${esc(S.cDate)}" data-inp="cDate" class="w-full mt-1.5 border-[1.5px] border-[var(--glassbd)] rounded-[13px] pl-3 pr-1.5 py-3 text-[13px] text-[var(--ink)] bg-[var(--field)]" /></div>
+           <div class="flex-1"><label class="text-[12px] font-bold text-[var(--ink2)] uppercase tracking-wide">Time</label>
+             <div class="flex gap-1.5 mt-1.5 items-stretch">
+               <input type="time" value="${esc(S.cTime)}" data-inp="cTime" class="flex-1 min-w-0 border-[1.5px] border-[var(--glassbd)] rounded-[11px] px-3.5 py-3 text-[15px] text-[var(--ink)] bg-[var(--field)]" />
+               <div class="flex border-[1.5px] border-[var(--glassbd)] rounded-[11px] overflow-hidden flex-none">
+                 <button data-act="ampm" data-id="AM" class="border-0 cursor-pointer text-[11px] font-bold px-2.5" style="${S.cAmpm==='AM'?'background:linear-gradient(135deg,#8b85f5,#5b52e0);color:#fff':'background:transparent;color:var(--ink3)'}">AM</button>
+                 <button data-act="ampm" data-id="PM" class="border-0 cursor-pointer text-[11px] font-bold px-2.5" style="${S.cAmpm==='PM'?'background:linear-gradient(135deg,#8b85f5,#5b52e0);color:#fff':'background:transparent;color:var(--ink3)'}">PM</button>
+               </div>
+             </div>
+           </div>
+         </div>
+         <label class="block mt-4 text-[12px] font-bold text-[var(--ink2)] uppercase tracking-wide">Location</label>
+         <input value="${esc(S.cLoc)}" data-inp="cLoc" placeholder="e.g. Maxwell Library · Room 204" class="w-full mt-1.5 border-[1.5px] border-[var(--glassbd)] rounded-[13px] px-3.5 py-3 text-[15px] text-[var(--ink)] bg-[var(--field)]" />
+         <label class="block mt-4 text-[12px] font-bold text-[var(--ink2)] uppercase tracking-wide">Max capacity</label>
+         <div class="flex items-center gap-3.5 mt-2.5">
+           <button data-act="capdec" class="w-[42px] h-[42px] rounded-xl border-[1.5px] border-[var(--glassbd)] bg-[var(--field)] text-[22px] font-bold text-[var(--accent)] cursor-pointer leading-none">−</button>
+           <span class="text-xl font-extrabold text-[var(--ink)] min-w-[34px] text-center">${S.cCap}</span>
+           <button data-act="capinc" class="w-[42px] h-[42px] rounded-xl border-[1.5px] border-[var(--glassbd)] bg-[var(--field)] text-[22px] font-bold text-[var(--accent)] cursor-pointer leading-none">+</button>
+           <span class="text-[13px] text-[var(--ink3)] font-semibold">people</span>
+         </div>
+         <label class="block mt-4 text-[12px] font-bold text-[var(--ink2)] uppercase tracking-wide">Description</label>
+         <textarea data-inp="cDesc" placeholder="Tell people what you're doing. Mention the topic, vibe, and what to bring — we'll pull out the keywords automatically." rows="5" class="w-full mt-1.5 border-[1.5px] border-[var(--glassbd)] rounded-[13px] px-3.5 py-3 text-[15px] text-[var(--ink)] bg-[var(--field)] resize-none leading-relaxed">${esc(S.cDesc)}</textarea>
+         <div class="mt-3.5 bg-[var(--tagbg)] rounded-[14px] px-3.5 py-3 backdrop-blur-md" style="border:1px dashed rgba(124,116,240,.45)">
+           <div class="flex items-center gap-1.5 text-[11.5px] font-extrabold text-[var(--tagtxt)] uppercase tracking-wide">
+             <span class="w-2 h-2 rounded-full" style="background:${S.cDesc?'#8b85f5':'rgba(124,116,240,.4)'};${S.cDesc?'animation:clqPulse 1.1s ease-in-out infinite':''}"></span>Passions detected
+           </div>
+           ${S.cTags.length===0?`<div class="text-[12.5px] text-[var(--ink3)] font-medium mt-2.5 leading-relaxed">Start describing your hangout — keywords will appear here as you type.</div>`:''}
+           <div class="flex flex-wrap gap-1.5 mt-2.5">
+             ${S.cTags.map(t=>`<span class="text-[12.5px] font-bold text-[var(--tagtxt)] bg-[var(--card)] border border-[var(--cardbd)] px-2.5 py-1 rounded-[9px]" style="animation:clqPop .3s ease both">#${esc(t)}</span>`).join('')}
+           </div>
+         </div>
+       </div>`;
+  return `
+  <div class="absolute inset-0 z-50 bg-[var(--scr2)] flex flex-col" style="animation:clqUp .32s cubic-bezier(.32,.72,0,1)">
+    <div class="flex items-center justify-between px-4 pt-[54px] pb-3.5 border-b border-[var(--hair)]">
+      <div data-act="closeCreate" class="cursor-pointer text-[15px] font-semibold text-[var(--ink2)]">Cancel</div>
+      <div class="text-base font-extrabold text-[var(--ink)]">New hangout</div>
+      <button data-act="publish" class="border-0 text-[15px] font-extrabold px-4 py-2 rounded-xl ${valid?'cursor-pointer':'cursor-default'}" style="${postStyle}">Post</button>
+    </div>
+    ${body}
+  </div>`;
+}
+
+function navBar(){
+  const active = (t)=> S.tab===t ? 'var(--accent)' : 'var(--chiptxt)';
+  const homeFill = S.tab==='home' ? 'rgba(165,160,251,.28)' : 'none';
+  const profFill = S.tab==='profile' ? 'rgba(165,160,251,.28)' : 'none';
+  return `
+  <div class="absolute left-3.5 right-3.5 bottom-[18px] z-[45] h-[54px] rounded-[27px] bg-[var(--navbg)] backdrop-blur-2xl border border-[var(--navbd)] flex items-center px-1.5" style="box-shadow:0 14px 40px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.16)">
+    <div data-act="tab" data-id="home" class="flex-1 flex flex-col items-center gap-[3px] cursor-pointer">
+      <svg width="25" height="25" viewBox="0 0 24 24" fill="none"><path d="M4 11 12 4l8 7v8a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1v-8Z" stroke="${active('home')}" stroke-width="1.9" stroke-linejoin="round" fill="${homeFill}"/></svg>
+      <span class="text-[10px] font-bold" style="color:${active('home')}">Home</span>
+    </div>
+    <div data-act="create" class="flex-1 flex justify-center cursor-pointer">
+      <div class="w-[46px] h-[34px] rounded-xl flex items-center justify-center" style="background:linear-gradient(135deg,#8b85f5,#5b52e0);box-shadow:0 8px 18px -4px rgba(124,116,240,.8),inset 0 1px 0 rgba(255,255,255,.35)"><svg width="20" height="20" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg></div>
+    </div>
+    <div data-act="tab" data-id="profile" class="flex-1 flex flex-col items-center gap-[3px] cursor-pointer">
+      <svg width="25" height="25" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="${active('profile')}" stroke-width="1.9" fill="${profFill}"/><path d="M4.5 20c.8-4 3.8-6.2 7.5-6.2S18.7 16 19.5 20" stroke="${active('profile')}" stroke-width="1.9" stroke-linecap="round" fill="${profFill}"/></svg>
+      <span class="text-[10px] font-bold" style="color:${active('profile')}">Profile</span>
+    </div>
+  </div>`;
+}
+
+//=============================================================
+// SHELL + RENDER
+//=============================================================
+function render(){
+  const root = document.getElementById('root');
+  root.setAttribute('data-theme', S.theme==='light'?'light':'dark');
+
+  let screen = '';
+  if(S.tab==='home') screen = homeScreen();
+  else if(S.tab==='calendar') screen = calendarScreen();
+  else if(S.tab==='profile') screen = profileScreen();
+
+  const showNav = S.detailId==null && !S.showCreate;
+  const detail = S.detailId!=null ? detailScreen() : '';
+  const create = S.showCreate ? createScreen() : '';
+  const toast = S.toast ? `
+    <div class="absolute left-1/2 bottom-24 z-[80] -translate-x-1/2 text-white px-[18px] py-3.5 rounded-2xl text-[13.5px] font-bold whitespace-nowrap flex items-center gap-2.5" style="background:rgba(28,28,42,.82);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);border:1px solid rgba(255,255,255,.14);box-shadow:0 14px 36px -8px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.16);animation:clqToast .35s cubic-bezier(.32,.72,0,1)">
+      <span class="inline-flex w-[22px] h-[22px] rounded-full items-center justify-center text-[13px]" style="background:#22c55e">✓</span>${esc(S.toast)}
+    </div>` : '';
+  const splash = S.splash ? `
+    <div class="absolute inset-0 z-[100] bg-black flex items-center justify-center transition-opacity duration-500" style="opacity:${S.splashFade?0:1};pointer-events:${S.splashFade?'none':'auto'}">
+      <div class="relative flex flex-col items-center">
+        <div class="absolute top-1/2 left-1/2 w-[98px] h-[98px] -mt-[49px] -ml-[49px] rounded-full pointer-events-none" style="border:2px solid rgba(244,114,182,.6);animation:clqRipple 1.5s ease-out .75s both"></div>
+        <div class="w-[98px] h-[98px] rounded-[27px] flex items-center justify-center" style="background:linear-gradient(140deg,#f472b6,#d946a8);box-shadow:0 16px 38px -8px rgba(236,72,153,.75),inset 0 1px 0 rgba(255,255,255,.38);animation:clqLogoTap 1.7s cubic-bezier(.34,1.56,.64,1) both">
+          <svg width="58" height="58" viewBox="0 0 64 64"><path d="M46 20A18 18 0 1 0 46 44" fill="none" stroke="#fff" stroke-width="7.5" stroke-linecap="round"/><path d="M48 24l2.6 6.4L57 33l-6.4 2.6L48 42l-2.6-6.4L39 33l6.4-2.6Z" fill="#fff"/></svg>
+        </div>
+      </div>
+    </div>` : '';
+
+  const sc = effScale();
+  const pct = Math.round(sc*100);
+  const zoomBar = `
+    <div class="fixed bottom-4 right-4 z-[120] flex items-center gap-1 bg-white/90 backdrop-blur border border-zinc-200 rounded-full px-1.5 py-1 select-none" style="box-shadow:0 6px 20px -6px rgba(0,0,0,.25)">
+      <button data-act="zoomout" class="w-8 h-8 rounded-full flex items-center justify-center text-zinc-600 hover:bg-zinc-100 cursor-pointer text-xl font-semibold leading-none">−</button>
+      <button data-act="zoomfit" class="min-w-[58px] h-8 px-2 rounded-full flex items-center justify-center text-[12px] font-bold cursor-pointer ${S.zoom==='fit'?'bg-zinc-900 text-white':'text-zinc-700 hover:bg-zinc-100'}">${S.zoom==='fit'?'Fit '+pct+'%':pct+'%'}</button>
+      <button data-act="zoomin" class="w-8 h-8 rounded-full flex items-center justify-center text-zinc-600 hover:bg-zinc-100 cursor-pointer text-xl font-semibold leading-none">+</button>
+    </div>`;
+  root.innerHTML = `
+  <div class="min-h-screen w-full flex items-center justify-center bg-white py-6 overflow-auto">
+    ${zoomBar}
+    <div class="relative flex-none" style="width:${Math.round(384*sc)}px;height:${Math.round(832*sc)}px">
+    <div class="absolute top-0 left-0 w-[384px] h-[832px] rounded-[56px] bg-black p-[13px]" style="transform:scale(${sc});transform-origin:top left;box-shadow:0 50px 100px -20px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.06),inset 0 0 2px 2px rgba(255,255,255,.05)">
+      <div class="relative w-full h-full rounded-[44px] overflow-hidden bg-[var(--screen)] flex flex-col transition-colors duration-300">
+
+        <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+          <div class="absolute rounded-full" style="top:-90px;left:-70px;width:300px;height:300px;background:radial-gradient(circle,#5b52e0,transparent 68%);filter:blur(36px);opacity:var(--g1);animation:clqDrift 11s ease-in-out infinite"></div>
+          <div class="absolute rounded-full" style="top:120px;right:-110px;width:300px;height:300px;background:radial-gradient(circle,#c026d3,transparent 68%);filter:blur(40px);opacity:var(--g2);animation:clqDrift 14s ease-in-out infinite reverse"></div>
+          <div class="absolute rounded-full" style="bottom:-120px;left:30px;width:340px;height:340px;background:radial-gradient(circle,#0ea5b7,transparent 68%);filter:blur(46px);opacity:var(--g3);animation:clqDrift 16s ease-in-out infinite"></div>
+        </div>
+
+        <div class="absolute top-0 left-0 right-0 h-[52px] z-[60] flex items-start justify-between pointer-events-none" style="padding:17px 30px 0 46px">
+          <span class="text-[15px] font-bold tracking-tight" style="color:var(--status)">9:41</span>
+          <div class="flex gap-[7px] items-center pt-0.5">
+            <svg width="18" height="11" viewBox="0 0 18 11"><rect x="0" y="6.5" width="3" height="4.5" rx=".6" fill="var(--status)"/><rect x="4.5" y="4" width="3" height="7" rx=".6" fill="var(--status)"/><rect x="9" y="2" width="3" height="9" rx=".6" fill="var(--status)"/><rect x="13.5" y="0" width="3" height="11" rx=".6" fill="var(--status)"/></svg>
+            <svg width="22" height="11" viewBox="0 0 26 12"><rect x="0.5" y="0.5" width="22" height="11" rx="3" stroke="var(--status)" stroke-opacity=".45" fill="none"/><rect x="2" y="2" width="18" height="8" rx="1.6" fill="var(--status)"/><rect x="24" y="4" width="1.5" height="4" rx=".7" fill="var(--status)" fill-opacity=".45"/></svg>
+          </div>
+        </div>
+        <div class="absolute top-3 left-1/2 -translate-x-1/2 w-[114px] h-[33px] rounded-[20px] bg-black z-[70]"></div>
+
+        <div class="relative flex-1 overflow-hidden z-[1]">
+          ${screen}
+          ${detail}
+          ${create}
+          ${showNav?navBar():''}
+          ${toast}
+        </div>
+
+        <div class="absolute bottom-[7px] left-1/2 -translate-x-1/2 w-[128px] h-[5px] rounded-full z-[90] pointer-events-none" style="background:var(--homeind)"></div>
+        ${splash}
+      </div>
+    </div>
+    </div>
+  </div>`;
+
+  // restore focus for text inputs
+  if(focusKey){
+    const el = root.querySelector('[data-inp="'+focusKey+'"]');
+    if(el){ el.focus(); try{ el.setSelectionRange(focusPos, focusPos); }catch(_){} }
+  }
+}
+
+//=============================================================
+// INTERACTIONS
+//=============================================================
+let focusKey=null, focusPos=0;
+
+document.addEventListener('input', (ev)=>{
+  const t = ev.target.closest('[data-inp]');
+  if(!t) return;
+  const key = t.getAttribute('data-inp');
+  focusKey = key; focusPos = t.selectionStart||0;
+  if(key==='query'){ S.query=t.value; runSearch(); return; }
+  if(key==='cDesc'){ S.cDesc=t.value; S.cTags=extract(t.value); render(); return; }
+  S[key]=t.value;
+  if(key==='cTitle') render();
+});
+
+document.addEventListener('click', (ev)=>{
+  const t = ev.target.closest('[data-act]');
+  if(!t) return;
+  const act = t.getAttribute('data-act');
+  const id = t.getAttribute('data-id');
+  focusKey=null;
+  switch(act){
+    case 'tab': go(id); break;
+    case 'open': S.detailId=parseInt(id,10); render(); break;
+    case 'closeDetail': S.detailId=null; render(); break;
+    case 'join': join(parseInt(id,10)); break;
+    case 'delete': deleteEvent(parseInt(id,10)); break;
+    case 'date': S.dateFilter=id; if(S.searched) runSearch(); else render(); break;
+    case 'clear': S.query=''; runSearch(); break;
+    case 'theme': S.theme = S.theme==='light'?'dark':'light'; render(); break;
+    case 'create': S.showCreate=true; render(); break;
+    case 'closeCreate': S.showCreate=false; render(); break;
+    case 'publish': publish(); break;
+    case 'ampm': S.cAmpm=id; render(); break;
+    case 'capinc': S.cCap=Math.min(50,S.cCap+1); render(); break;
+    case 'capdec': S.cCap=Math.max(2,S.cCap-1); render(); break;
+    case 'addphoto': S.photoCount++; render(); break;
+    case 'zoomin': setZoom(1); break;
+    case 'zoomout': setZoom(-1); break;
+    case 'zoomfit': setZoom('fit'); break;
+  }
+});
+
+//=============================================================
+// BOOT
+//=============================================================
+render();
+let rzT=null;
+window.addEventListener('resize', ()=>{ if(S.zoom!=='fit') return; clearTimeout(rzT); rzT=setTimeout(render,120); });
+setTimeout(()=>{ S.splashFade=true; render(); }, 2700);
+setTimeout(()=>{ S.splash=false; render(); }, 3250);
+</script>
+</body>
+</html>
