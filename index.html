@@ -17,6 +17,7 @@ input[type="time"]::-webkit-calendar-picker-indicator{display:none;-webkit-appea
 input[type="date"],input[type="time"]{-webkit-appearance:none;appearance:none}
 .ns::-webkit-scrollbar{width:0;height:0}.ns{scrollbar-width:none}
 
+*{accent-color:#64E6B4}
 :root{
 --bg:#FFFFFF;
 --surface:rgba(0,0,0,.04);--surfaceH:rgba(0,0,0,.06);
@@ -52,7 +53,7 @@ const EVENTS=[
 const CC={Study:'#888',Social:'#888',Sports:'#888',Arts:'#888'};
 
 const S={tab:'home',detail:null,create:false,hostPopup:null,query:'',filter:'all',joined:{999:true,6:true,2:true,7:true},toast:null,splash:true,splashFade:false,zoom:'fit',
-cTitle:'',cDate:'',cTime:'',cAmpm:'PM',cLoc:'',cCap:8,cDesc:'',cTags:[],cTag:'',publishing:false,userEvents:[]};
+cTitle:'',cDate:'',cTime:'',cAmpm:'PM',cLoc:'',cCap:8,cDesc:'',cCat:'Social',cTags:[],cTag:'',publishing:false,userEvents:[]};
 
 let toastT=null,focusK=null,focusP=0;
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
@@ -65,7 +66,7 @@ function matches(e){
   if(S.filter==='weekend'&&!e.weekend)return false;
   if(S.filter==='week'&&!e.week)return false;
   if(!q)return true;
-  return(e.title+' '+e.host+' '+e.loc+' '+e.desc).toLowerCase().includes(q);
+  return(e.title+' '+e.host+' '+e.loc+' '+e.desc+' '+e.cat).toLowerCase().includes(q);
 }
 function toast(m){}
 function confetti(ev){
@@ -104,7 +105,7 @@ function setZoom(d){if(d==='fit'){S.zoom='fit';render();return}S.zoom=Math.round
 function card(e){
   const j=!!S.joined[e.id],f=filled(e),p=pct(e),cc=CC[e.cat]||'var(--ink2)';
   return `
-  <div style="animation:slideUp .3s ease both;padding:16px 20px;border-bottom:1px solid var(--hair)">
+  <div style="animation:slideUp .3s ease both;padding:16px 20px;border-bottom:1px solid var(--hair);${e.mine?'background:rgba(100,230,180,.15)':''}">
     <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:6px">
       <span style="font-size:10px;font-weight:800;color:${cc};text-transform:uppercase;letter-spacing:1px">${e.cat}</span>
       <span style="font-size:10px;color:var(--ink3)">·</span>
@@ -275,19 +276,23 @@ function detailScreen(){
 }
 
 function createScreen(){
-  const v=S.cTitle.trim()&&S.cDesc.trim();
+  const v=S.cTitle.trim()&&S.cDesc.trim()&&S.cDate&&S.cTime&&S.cLoc.trim();
   return `
-  <div style="position:absolute;inset:0;z-index:50;background:#fff;display:flex;flex-direction:column;animation:slideSheet .3s cubic-bezier(.32,.72,0,1)">
+  <div style="position:absolute;inset:0;z-index:50;background:#fff;display:flex;flex-direction:column;${S._createAnim?'animation:slideSheet .3s cubic-bezier(.32,.72,0,1)':''}">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:50px 16px 12px;border-bottom:1px solid rgba(0,0,0,.08)">
       <div data-act="closeCreate" style="cursor:pointer;font-size:13px;font-weight:600;color:#888">Cancel</div>
       <div></div>
-      <button data-act="publish" style="border:none;font-size:13px;font-weight:800;padding:6px 14px;border-radius:4px;font-family:inherit;text-transform:uppercase;letter-spacing:.5px;${v?'cursor:pointer;background:#0A0A0A;color:var(--yellow)':'cursor:default;background:rgba(0,0,0,.06);color:rgba(0,0,0,.25)'}">Post</button>
+      <button data-act="publish" style="border:none;font-size:10px;font-weight:800;padding:7px 10px;border-radius:4px;font-family:inherit;text-transform:uppercase;letter-spacing:.5px;${v?'cursor:pointer;background:var(--yellow);color:#0A0A0A':'cursor:default;background:rgba(0,0,0,.06);color:rgba(0,0,0,.25)'}">Post</button>
     </div>
     ${S.publishing
       ?`<div style="flex:1;display:flex;align-items:center;justify-content:center"><div style="width:24px;height:24px;border:3px solid rgba(0,0,0,.1);border-top-color:#0A0A0A;border-radius:50%;animation:spin .7s linear infinite"></div></div>`
       :`<div class="ns" style="flex:1;overflow-y:auto;padding:16px 20px 40px">
         <label style="font-size:10px;font-weight:800;color:#888;text-transform:uppercase;letter-spacing:.5px">Title</label>
         <input value="${esc(S.cTitle)}" data-inp="cTitle" placeholder="e.g. Calculus Final Cram" style="width:100%;margin-top:6px;margin-bottom:16px;border:none;border-radius:4px;padding:10px 12px;font-size:14px;color:#0A0A0A;background:rgba(0,0,0,.04)" />
+        <label style="font-size:10px;font-weight:800;color:#888;text-transform:uppercase;letter-spacing:.5px">Category</label>
+        <div style="display:flex;gap:6px;margin-top:6px;margin-bottom:16px">
+          ${['Sports','Study','Social','Arts'].map(c=>`<button data-act="setcat" data-id="${c}" style="flex:1;border:${S.cCat===c?'none':'1px solid var(--hair)'};background:${S.cCat===c?'var(--yellow)':'transparent'};color:${S.cCat===c?'#0A0A0A':'var(--ink3)'};font-size:10px;font-weight:700;padding:8px 0;border-radius:4px;cursor:pointer;font-family:inherit;text-transform:uppercase;letter-spacing:.5px">${c}</button>`).join('')}
+        </div>
         <div style="display:flex;gap:10px;margin-bottom:16px">
           <div style="flex:1"><label style="font-size:10px;font-weight:800;color:#888;text-transform:uppercase;letter-spacing:.5px">Date</label><input value="${esc(S.cDate||'')}" data-inp="cDate" type="date" style="width:100%;margin-top:6px;border:none;border-radius:4px;padding:10px 12px;font-size:13px;color:#0A0A0A;background:rgba(0,0,0,.04)" /></div>
           <div style="flex:1"><label style="font-size:10px;font-weight:800;color:#888;text-transform:uppercase;letter-spacing:.5px">Time</label>
@@ -393,7 +398,7 @@ function render(){
 document.addEventListener('input',ev=>{
   const t=ev.target.closest('[data-inp]');if(!t)return;
   const k=t.getAttribute('data-inp');focusK=k;focusP=t.selectionStart||0;
-  S[k]=t.value;if(k==='query')render();
+  S[k]=t.value;if(k==='query')render();else if(S.create){const btn=document.querySelector('[data-act="publish"]');if(btn){const v=S.cTitle.trim()&&S.cDesc.trim()&&S.cDate&&S.cTime&&S.cLoc.trim();btn.style.background=v?'var(--yellow)':'rgba(0,0,0,.06)';btn.style.color=v?'#0A0A0A':'rgba(0,0,0,.25)';btn.style.cursor=v?'pointer':'default'}}
 });
 document.addEventListener('keydown',ev=>{
   const t=ev.target.closest('[data-inp="cTag"]');
@@ -412,9 +417,9 @@ document.addEventListener('click',ev=>{
     case'join':join(parseInt(id),ev);return;
     case'delete':delete S.joined[parseInt(id)];S.userEvents=S.userEvents.filter(e=>e.id!==parseInt(id));S.detail=null;toast('Deleted');break;
     case'filter':S.filter=id;break;case'clear':S.query='';break;
-    case'create':S.create=true;break;case'closeCreate':S.create=false;break;
-    case'publish':if(!S.cTitle.trim()||!S.cDesc.trim())return;S.publishing=true;render();setTimeout(()=>{const nid=2000+S.userEvents.length;S.userEvents.unshift({id:nid,title:S.cTitle.trim(),host:'Jamie Chen',meta:'CS · 2027',cat:'Study',when:'TBD',time:'TBD',end:'',loc:S.cLoc.trim()||'Campus',cap:S.cCap,filled:1,today:false,week:true,weekend:false,desc:S.cDesc.trim(),tags:[],mine:true});S.joined[nid]=true;S.publishing=false;S.create=false;S.tab='home';S.cTitle='';S.cLoc='';S.cCap=8;S.cDesc='';toast('Published');render()},900);return;
-    case'capinc':S.cCap=Math.min(50,S.cCap+1);break;case'capdec':S.cCap=Math.max(2,S.cCap-1);break;case'ampm':S.cAmpm=id;break;case'rmtag':S.cTags.splice(parseInt(id),1);break;case'showhost':S.hostPopup=parseInt(id);break;case'closehost':S.hostPopup=null;break;
+    case'create':S.create=true;S._createAnim=true;setTimeout(()=>{S._createAnim=false},300);break;case'closeCreate':S.create=false;break;
+    case'publish':if(!S.cTitle.trim()||!S.cDesc.trim())return;S.publishing=true;render();setTimeout(()=>{const nid=2000+S.userEvents.length;const dd=S.cDate?new Date(S.cDate+'T12:00'):null;const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];const mons=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];const whenStr=dd?days[dd.getDay()]+', '+mons[dd.getMonth()]+' '+dd.getDate():'TBD';const hm=S.cTime?S.cTime.split(':'):null;let timeStr='TBD';if(hm){let h=parseInt(hm[0]),m=hm[1],ap=S.cAmpm||'AM';if(h===0)h=12;else if(h>12)h-=12;timeStr=h+(m!=='00'?':'+m:'')+' '+ap;}S.userEvents.unshift({id:nid,title:S.cTitle.trim(),host:'Jamie Chen',meta:'CS · 2027',cat:S.cCat,when:whenStr,time:timeStr,end:'',loc:S.cLoc.trim()||'Campus',cap:S.cCap,filled:1,today:false,week:true,weekend:false,desc:S.cDesc.trim(),tags:[],mine:true});S.joined[nid]=true;S.publishing=false;S.create=false;S.tab='home';S.cTitle='';S.cDate='';S.cTime='';S.cLoc='';S.cCap=8;S.cCat='Social';S.cDesc='';toast('Published');render()},900);return;
+    case'capinc':S.cCap=Math.min(50,S.cCap+1);break;case'capdec':S.cCap=Math.max(2,S.cCap-1);break;case'ampm':S.cAmpm=id;break;case'setcat':S.cCat=id;break;case'rmtag':S.cTags.splice(parseInt(id),1);break;case'showhost':S.hostPopup=parseInt(id);break;case'closehost':S.hostPopup=null;break;
     case'zi':setZoom(1);return;case'zo':setZoom(-1);return;case'zf':setZoom('fit');return;
   }
   render();
