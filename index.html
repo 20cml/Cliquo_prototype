@@ -16,6 +16,8 @@ input[type="date"]::-webkit-calendar-picker-indicator,
 input[type="time"]::-webkit-calendar-picker-indicator{display:none;-webkit-appearance:none}
 input[type="date"],input[type="time"]{-webkit-appearance:none;appearance:none}
 .ns::-webkit-scrollbar{width:0;height:0}.ns{scrollbar-width:none}
+.ecard:hover{background:rgba(100,230,180,.15)!important}
+.ecard.mine:hover{background:rgba(100,230,180,.30)!important}
 
 *{accent-color:#64E6B4}
 :root{
@@ -39,7 +41,7 @@ input[type="date"],input[type="time"]{-webkit-appearance:none;appearance:none}
 <div id="app"></div>
 <script>
 const EVENTS=[
-{id:999,title:'FIFA Fan Festival',host:'Jamie Chen',meta:'CS · 2027',cat:'Sports',when:'Wed, Jul 2',time:'4 PM',end:'10 PM',loc:'Fort York & The Bentway',cap:50,filled:38,today:false,week:true,weekend:false,desc:"Big screen matches, food trucks, and good energy at Fort York. Open to everyone — no tickets needed, just show up.",tags:['FIFA','WorldCup','Soccer','Festival'],mine:true},
+{id:999,title:'FIFA Fan Festival',host:'Jamie Chen',meta:'CS · 2027',cat:'Sports',when:'Wed, Jul 2',time:'11 AM',end:'3 PM',loc:'Fort York & The Bentway',cap:50,filled:38,today:false,week:true,weekend:false,desc:"Big screen matches, food trucks, and good energy at Fort York. Open to everyone — no tickets needed, just show up.",tags:['FIFA','WorldCup','Soccer','Festival']},
 {id:6,title:'Clothing Swap & Sustainable Fashion Market',host:'Lena Cho',meta:'Fine Arts · 2026',cat:'Social',showup:55,when:'Sat, Jul 5',time:'11 AM',end:'4 PM',loc:'Hart House Circle',cap:40,filled:40,today:false,week:true,weekend:true,desc:"Bring clothes you don't wear anymore and swap them for something new. Local sustainable brands will also be selling. Zero waste, all vibes.",tags:['ClothingSwap','Sustainable','Fashion','ThriftFlip']},
 {id:3,title:'Board Game Night',host:'Marco Reyes',meta:'Kinesiology · 2026',cat:'Social',showup:65,when:'Sat, Oct 17',time:'7 PM',end:'10 PM',loc:'Student Centre',cap:16,filled:11,today:false,week:true,weekend:true,desc:"Playing Catan and a few party games. Snacks provided, come hang out and meet some new people!",tags:['BoardGames','Catan','Social']},
 {id:7,title:'Sunrise Run Club',host:'Amara Diallo',meta:'Nursing · 2028',cat:'Sports',when:'Fri, Aug 1',time:'7 AM',end:'8 AM',loc:'Campus Gates',cap:15,filled:9,today:true,week:true,weekend:false,desc:"Easy 5K loop around campus to start the week right. All paces welcome — we regroup at the top of the hill and grab smoothies after.",tags:['Running','Fitness','Morning']},
@@ -48,11 +50,16 @@ const EVENTS=[
 {id:1,title:'Linear Algebra Midterm Prep',host:'Alex Kim',meta:'SE · 2028',cat:'Study',when:'Wed, Oct 14',time:'2 PM',end:'4 PM',loc:'Maxwell Library · Rm 204',cap:8,filled:4,today:false,week:true,weekend:false,desc:"Going over the numerical linear algebra practice problems before our midterm next week. I'll book a room and bring coffee.",tags:['LinearAlgebra','StudyGroup','MidtermPrep']},
 {id:4,title:'Sunset Yoga & Mindfulness Session',host:'Sara Okafor',meta:'Life Sci · 2028',cat:'Sports',showup:34,when:'Fri, Jul 4',time:'6 PM',end:'7:30 PM',loc:'King\'s College Circle',cap:25,filled:18,today:false,week:true,weekend:false,desc:"Unwind with a guided yoga flow and meditation as the sun sets over campus. Bring a mat or towel. All levels welcome — beginners especially!",tags:['Yoga','Mindfulness','Wellness','Sunset']},
 {id:2,title:'Monet to Matisse',host:'Priya Nair',meta:'History · 2027',cat:'Arts',when:'Sun, Jul 6',time:'1 PM',end:'4 PM',loc:'Art Gallery of Ontario',cap:15,filled:10,today:false,week:true,weekend:true,desc:"Exploring the Impressionist collection at the AGO. We'll grab coffee at the gallery café after. Great for art lovers and first-timers alike!",tags:['Art','AGO','Impressionism','Gallery']},
+{id:10,title:'Software Requirements — Usability Test',host:'Camila Lee',meta:'CS · 2027',cat:'Study',when:'Wed, Jul 2',time:'2 PM',end:'4 PM',loc:'McMaster University · Rm 400',cap:12,filled:3,today:false,week:false,weekend:false,desc:"Running usability tests for our SFWRTECH 3RQ3 project. Come test interactive prototypes and give feedback — great practice for your own milestones.",tags:['Usability','Testing','SFWRTECH'],mine:true},
+{id:11,title:'Artificial Intelligence Talk',host:'Victor Leme',meta:'CS · 2027',cat:'Study',when:'Wed, Sep 2',time:'7 PM',end:'9 PM',loc:'Hilton Hotel Downtown',cap:50,filled:32,today:false,week:false,weekend:false,desc:"Guest speaker series on the future of AI in software engineering. Networking reception after — open to all students.",tags:['AI','Talk','Networking']},
+{id:12,title:'Magic Cube Competition',host:'Lisa Park',meta:'CS · 2027',cat:'Study',when:'Fri, Sep 18',time:'5 PM',end:'8 PM',loc:'Sheraton Hotel',cap:30,filled:18,today:false,week:false,weekend:false,desc:"Speedcubing tournament open to all skill levels. Bring your own cube or borrow one. Prizes for top 3 — beginners welcome!",tags:['Rubiks','Competition','Puzzle']},
+{id:13,title:'System Design Study',host:'Eli Mohan',meta:'CS · 2027',cat:'Study',when:'Mon, Nov 16',time:'10 AM',end:'12 PM',loc:'Maxwell Library · Rm 100',cap:15,filled:6,today:false,week:false,weekend:false,desc:"Deep dive into system design patterns — load balancers, caching, database sharding. Preparing for technical interviews together.",tags:['SystemDesign','Interview','Architecture']},
+{id:14,title:'Data Center Tour — Microsoft',host:'Hugo Paz',meta:'CS · 2027',cat:'Study',when:'Tue, Dec 1',time:'3 PM',end:'5 PM',loc:'Microsoft Downtown',cap:20,filled:14,today:false,week:false,weekend:false,desc:"Exclusive tour of Microsoft's downtown data center. Learn about cloud infrastructure, networking, and career opportunities. Limited spots!",tags:['Microsoft','DataCenter','CloudComputing']},
 ];
 
 const CC={Study:'#888',Social:'#888',Sports:'#888',Arts:'#888'};
 
-const S={tab:'home',detail:null,create:false,hostPopup:null,query:'',filter:'all',joined:{999:true,6:true,2:true,7:true},toast:null,splash:true,splashFade:false,zoom:'fit',
+const S={tab:'home',detail:null,create:false,hostPopup:null,query:'',filter:'all',joined:{999:true,6:true,2:true,7:true,10:true},toast:null,splash:true,splashFade:false,zoom:'fit',
 cTitle:'',cDate:'',cTime:'',cAmpm:'PM',cLoc:'',cCap:8,cDesc:'',cCat:'Social',cTags:[],cTag:'',publishing:false,userEvents:[]};
 
 let toastT=null,focusK=null,focusP=0;
@@ -105,7 +112,7 @@ function setZoom(d){if(d==='fit'){S.zoom='fit';render();return}S.zoom=Math.round
 function card(e){
   const j=!!S.joined[e.id],f=filled(e),p=pct(e),cc=CC[e.cat]||'var(--ink2)';
   return `
-  <div style="animation:slideUp .3s ease both;padding:16px 20px;border-bottom:1px solid var(--hair);${e.mine?'background:rgba(100,230,180,.15)':''}">
+  <div class="ecard${e.mine?' mine':''}" style="animation:slideUp .3s ease both;padding:16px 20px;border-bottom:1px solid var(--hair);${e.mine?'background:rgba(100,230,180,.15)':''}">
     <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:6px">
       <span style="font-size:10px;font-weight:800;color:${cc};text-transform:uppercase;letter-spacing:1px">${e.cat}</span>
       <span style="font-size:10px;color:var(--ink3)">·</span>
@@ -131,7 +138,7 @@ function card(e){
 function homeScreen(){
   const monOrder={Jan:1,Feb:2,Mar:3,Apr:4,May:5,Jun:6,Jul:7,Aug:8,Sep:9,Oct:10,Nov:11,Dec:12};
   const sortKey=w=>{const mon=w.match(/Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec/);const day=w.match(/\d+/);return(monOrder[mon?.[0]]||0)*100+(day?parseInt(day[0]):0)};
-  let feed=allEv().filter(matches).sort((a,b)=>sortKey(a.when)-sortKey(b.when));
+  let feed=allEv().filter(e=>matches(e)&&!e.mine).sort((a,b)=>sortKey(a.when)-sortKey(b.when));
   const chips=[['all','All'],['today','Today'],['week','Week'],['weekend','Weekend']];
   return `
   <div id="feed" class="ns" style="position:absolute;inset:0;overflow-y:auto;padding:46px 0 76px">
@@ -174,10 +181,13 @@ function calGrouped(cal){
     lastMon=mon;
     var day=(e.when.match(/\d+/)||[''])[0];
     var dow=e.when.split(',')[0];
-    html+='<div data-act="open" data-id="'+e.id+'" style="cursor:pointer;padding:14px 4px;border-bottom:1px solid rgba(0,0,0,.06);display:flex;align-items:center;gap:14px;animation:slideUp .3s ease both">';
+    html+='<div class="ecard" data-act="open" data-id="'+e.id+'" style="cursor:pointer;padding:14px 4px;border-bottom:1px solid rgba(0,0,0,.06);animation:slideUp .3s ease both">';
+    if(e.mine)html+='<div style="display:inline-block;background:rgba(100,230,180,.55);color:#0A0A0A;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;padding:4px 12px 4px 10px;margin-bottom:6px;margin-left:-20px;clip-path:polygon(0 0,100% 0,calc(100% - 6px) 50%,100% 100%,0 100%)">Host</div>';
+    html+='<div style="display:flex;align-items:center;gap:14px">';
     html+='<div style="flex:none;width:36px;text-align:center"><div style="font-size:8px;font-weight:700;color:var(--purple);text-transform:uppercase;letter-spacing:.5px">'+esc(dow)+'</div><div style="font-size:20px;font-weight:800;color:#0A0A0A">'+esc(day)+'</div><div style="font-size:8px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.5px">'+esc(mon)+'</div></div>';
+    html+='<div style="flex:none;width:3px;border-radius:2px;background:rgba(100,230,180,.8);align-self:stretch"></div>';
     html+='<div style="flex:1;min-width:0"><div style="font-family:DM Sans,sans-serif;font-size:14px;font-weight:500;color:#0A0A0A">'+esc(e.title)+'</div><div style="font-size:11px;color:#999;margin-top:2px">'+esc(e.time)+' · '+esc(e.loc)+'</div></div>';
-    html+='</div>';
+    html+='</div></div>';
   }
   return html;
 }
@@ -203,9 +213,9 @@ function profileScreen(){
   return `
   <div class="ns" style="position:absolute;inset:0;overflow-y:auto;padding:50px 0 76px;animation:fadeIn .2s">
     <div style="display:flex;align-items:center;gap:16px;padding:0 20px">
-      <div style="width:72px;height:72px;border-radius:50%;background:var(--yellow);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:900;color:#0A0A0A;flex-shrink:0">JC</div>
+      <div style="width:72px;height:72px;border-radius:50%;background:var(--yellow);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:900;color:#0A0A0A;flex-shrink:0">CL</div>
       <div style="flex:1">
-        <div style="font-size:16px;font-weight:800;color:var(--ink)">Jamie Chen</div>
+        <div style="font-size:16px;font-weight:800;color:var(--ink)">Camila Lee</div>
         <div style="display:flex;gap:20px;margin-top:8px">
           <div><div style="font-size:17px;font-weight:900;color:var(--ink)">${jc}</div><div style="font-size:9px;color:var(--ink3);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-top:1px">Joined</div></div>
           <div><div style="font-size:17px;font-weight:900;color:var(--ink)">${S.userEvents.length+1}</div><div style="font-size:9px;color:var(--ink3);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-top:1px">Hosted</div></div>
@@ -418,7 +428,7 @@ document.addEventListener('click',ev=>{
     case'delete':delete S.joined[parseInt(id)];S.userEvents=S.userEvents.filter(e=>e.id!==parseInt(id));S.detail=null;toast('Deleted');break;
     case'filter':S.filter=id;break;case'clear':S.query='';break;
     case'create':S.create=true;S._createAnim=true;setTimeout(()=>{S._createAnim=false},300);break;case'closeCreate':S.create=false;break;
-    case'publish':if(!S.cTitle.trim()||!S.cDesc.trim())return;S.publishing=true;render();setTimeout(()=>{const nid=2000+S.userEvents.length;const dd=S.cDate?new Date(S.cDate+'T12:00'):null;const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];const mons=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];const whenStr=dd?days[dd.getDay()]+', '+mons[dd.getMonth()]+' '+dd.getDate():'TBD';const hm=S.cTime?S.cTime.split(':'):null;let timeStr='TBD';if(hm){let h=parseInt(hm[0]),m=hm[1],ap=S.cAmpm||'AM';if(h===0)h=12;else if(h>12)h-=12;timeStr=h+(m!=='00'?':'+m:'')+' '+ap;}S.userEvents.unshift({id:nid,title:S.cTitle.trim(),host:'Jamie Chen',meta:'CS · 2027',cat:S.cCat,when:whenStr,time:timeStr,end:'',loc:S.cLoc.trim()||'Campus',cap:S.cCap,filled:1,today:false,week:true,weekend:false,desc:S.cDesc.trim(),tags:[],mine:true});S.joined[nid]=true;S.publishing=false;S.create=false;S.tab='home';S.cTitle='';S.cDate='';S.cTime='';S.cLoc='';S.cCap=8;S.cCat='Social';S.cDesc='';toast('Published');render()},900);return;
+    case'publish':if(!S.cTitle.trim()||!S.cDesc.trim())return;S.publishing=true;render();setTimeout(()=>{const nid=2000+S.userEvents.length;const dd=S.cDate?new Date(S.cDate+'T12:00'):null;const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];const mons=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];const whenStr=dd?days[dd.getDay()]+', '+mons[dd.getMonth()]+' '+dd.getDate():'TBD';const hm=S.cTime?S.cTime.split(':'):null;let timeStr='TBD';if(hm){let h=parseInt(hm[0]),m=hm[1],ap=S.cAmpm||'AM';if(h===0)h=12;else if(h>12)h-=12;timeStr=h+(m!=='00'?':'+m:'')+' '+ap;}S.userEvents.unshift({id:nid,title:S.cTitle.trim(),host:'Camila Lee',meta:'CS · 2027',cat:S.cCat,when:whenStr,time:timeStr,end:'',loc:S.cLoc.trim()||'Campus',cap:S.cCap,filled:1,today:false,week:true,weekend:false,desc:S.cDesc.trim(),tags:[],mine:true});S.joined[nid]=true;S.publishing=false;S.create=false;S.tab='home';S.cTitle='';S.cDate='';S.cTime='';S.cLoc='';S.cCap=8;S.cCat='Social';S.cDesc='';toast('Published');render()},900);return;
     case'capinc':S.cCap=Math.min(50,S.cCap+1);break;case'capdec':S.cCap=Math.max(2,S.cCap-1);break;case'ampm':S.cAmpm=id;break;case'setcat':S.cCat=id;break;case'rmtag':S.cTags.splice(parseInt(id),1);break;case'showhost':S.hostPopup=parseInt(id);break;case'closehost':S.hostPopup=null;break;
     case'zi':setZoom(1);return;case'zo':setZoom(-1);return;case'zf':setZoom('fit');return;
   }
@@ -426,7 +436,7 @@ document.addEventListener('click',ev=>{
 });
 render();
 let swipeX=0,swiping=false;
-document.addEventListener('mousedown',ev=>{swipeX=ev.screenX;swiping=true});
+document.addEventListener('mousedown',ev=>{if(ev.target.closest('input,textarea')){swiping=false;return}swipeX=ev.screenX;swiping=true});
 document.addEventListener('mouseup',ev=>{
   if(!swiping)return;swiping=false;
   if(S.detail!=null||S.create||S.hostPopup!=null)return;
